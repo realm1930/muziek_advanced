@@ -1,16 +1,16 @@
 package be.vdab.muziek;
 
 import be.vdab.muziek.domain.Album;
+import be.vdab.muziek.domain.Track;
 import be.vdab.muziek.exceptions.AlbumNietGevondenException;
 import be.vdab.muziek.services.AlbumService;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.ExposesResourceFor;
 import org.springframework.hateoas.server.TypedEntityLinks;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Arne Van Eycken
@@ -38,7 +38,17 @@ class AlbumController {
                 .orElseThrow(AlbumNietGevondenException::new);
     }
 
-    
+    @GetMapping("{id}/tracks")
+    CollectionModel<Track> getTracks(@PathVariable long id){
+        return albumService.findById(id).map(album ->
+                CollectionModel.of(album.getTracks())
+        .add(links.linkForItemResource(album).slash("tracks").withRel("self"))
+        .add(links.linkToItemResource(album).withRel("album")))
+                .orElseThrow(AlbumNietGevondenException::new);
+    }
+    @ExceptionHandler(AlbumNietGevondenException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    void albumNietGevonden() { }
 
     private static class AlbumArtiest {
         private final String album;
@@ -47,6 +57,14 @@ class AlbumController {
         public AlbumArtiest(Album album) {
             this.album = album.getNaam();
             this.artiest = album.getArtiest().getNaam();
+        }
+
+        public String getAlbum() {
+            return album;
+        }
+
+        public String getArtiest() {
+            return artiest;
         }
     }
 }
