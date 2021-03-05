@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("albums")
 @ExposesResourceFor(Album.class)
+@CrossOrigin(exposedHeaders = "location")
 class AlbumController {
 
     private final AlbumService albumService;
